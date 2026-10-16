@@ -1,6 +1,6 @@
 {
- "etat": "inconnu",
- "echecs": 0,
- "jour": "",
- "derniere_verif": ""
+ "etat": "down",
+ "echecs": 1,
+ "jour": "2026-10-16",
+ "derniere_verif": "2026-10-16 10:33 UTC"
 }
