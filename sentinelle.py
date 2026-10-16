@@ -4,6 +4,12 @@ UNIQUEMENT quand l'etat change (panne detectee / retour a la normale).
 Ne tourne pas sur le VPS : tourne chez GitHub, donc survit a la panne."""
 import json, os, socket, datetime, urllib.request, urllib.parse, sys
 
+# Les runners GitHub n'ont pas de route IPv6 : on force l'IPv4 pour joindre l'API Telegram
+_getaddrinfo_orig = socket.getaddrinfo
+def _getaddrinfo_ipv4(host, port, family=0, type=0, proto=0, flags=0):
+    return _getaddrinfo_orig(host, port, socket.AF_INET, type, proto, flags)
+socket.getaddrinfo = _getaddrinfo_ipv4
+
 HOST = os.environ.get("VPS_HOST", "72.62.38.150")
 PORT = int(os.environ.get("VPS_PORT", "22"))
 TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
