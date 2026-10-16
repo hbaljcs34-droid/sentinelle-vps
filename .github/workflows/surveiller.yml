@@ -1,0 +1,50 @@
+name: Sentinelle VPS
+
+# Surveillance externe du VPS de Jeremy (72.62.38.150, port 22).
+# Tourne chez GitHub -> detecte la panne meme si le VPS est coupe.
+# Alerte Telegram uniquement sur changement d'etat (pas de spam).
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"     # toutes les 15 minutes
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Envoyer un message de test sur Telegram"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sentinelle
+  cancel-in-progress: false
+
+jobs:
+  surveiller:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test du serveur + alerte si changement d'etat
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          FORCE_TEST: ${{ inputs.test && '1' || '' }}
+        run: python3 sentinelle.py
+
+      - name: Enregistrer l'etat (si change)
+        run: |
+          git config user.name "sentinelle"
+          git config user.email "sentinelle@users.noreply.github.com"
+          if [ -n "$(git status --porcelain etat.json)" ]; then
+            git add etat.json
+            git commit -m "etat $(python3 -c "import json;d=json.load(open('etat.json'));print(d.get('etat'),d.get('echecs'),d.get('derniere_verif',''))")"
+            git push
+          else
+            echo "aucun changement : pas de commit"
+          fi
