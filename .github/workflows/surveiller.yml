@@ -13,6 +13,10 @@ on:
         description: "Envoyer un message de test sur Telegram"
         type: boolean
         default: false
+      simuler:
+        description: "Simuler une panne (test du declenchement de l'alerte)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -32,8 +36,9 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_HOST: ${{ inputs.simuler && '192.0.2.1' || secrets.VPS_HOST }}
+          VPS_PORT: ${{ inputs.simuler && '22' || secrets.VPS_PORT }}
+          SEUIL_ECHECS: ${{ inputs.simuler && '1' || '2' }}
           FORCE_TEST: ${{ inputs.test && '1' || '' }}
         run: python3 sentinelle.py
 
